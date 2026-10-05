@@ -47,10 +47,19 @@ jobs:
       - name: Free disk space
         run: |
           sudo rm -rf /Users/runner/Library/Android /usr/local/share/dotnet /usr/local/lib/node_modules || true
-          ACTIVE="$(dirname "$(dirname "$(xcode-select -p)")")"
+          # Resolve symlinks so the real directory of the selected Xcode is never deleted.
+          ACTIVE="$(cd "$(xcode-select -p)/../.." && pwd -P)"
           for x in /Applications/Xcode_*.app; do
             if [ "$x" != "$ACTIVE" ] && [ ! -L "$x" ]; then sudo rm -rf "$x" || true; fi
           done
+          # Third-party builds (dav1d meson crossfiles) hardcode /Applications/Xcode.app,
+          # so make sure it points at the selected Xcode.
+          if [ -L /Applications/Xcode.app ] || [ ! -e /Applications/Xcode.app ]; then
+            sudo rm -f /Applications/Xcode.app
+            sudo ln -s "$ACTIVE" /Applications/Xcode.app
+          fi
+          ls -la /Applications | grep -i xcode
+          ls /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/
           df -h /
 
       - name: Create canonical source directory
