@@ -120,9 +120,8 @@ jobs:
           OUTPUT_PATH="build/artifacts"
           rm -rf "$OUTPUT_PATH"
           mkdir -p "$OUTPUT_PATH"
-          for f in bazel-out/applebin_ios-ios_arm*-opt-ST-*/bin/Telegram/Telegram.ipa; do
-            cp "$f" "$OUTPUT_PATH/AyuGram-$APP_VERSION-$BUILD_NUMBER.ipa"
-          done
+          # Bazel reports the output as bazel-bin/Telegram/Telegram.ipa (a symlink into bazel-out).
+          cp -L bazel-bin/Telegram/Telegram.ipa "$OUTPUT_PATH/AyuGram-$APP_VERSION-$BUILD_NUMBER.ipa"
           ls -la "$OUTPUT_PATH"
 
       - name: Upload IPA
