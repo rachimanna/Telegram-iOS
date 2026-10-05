@@ -9,6 +9,7 @@ import AppBundle
 import AccountContext
 import TelegramAudio
 import TelegramVoip
+import AyuCore
 
 private let sharedProviderDelegate: CallKitProviderDelegate? = {
     return CallKitProviderDelegate()
@@ -89,6 +90,10 @@ public final class CallKitIntegration {
     }
     
     private func donateIntent(peerId: EnginePeer.Id, displayTitle: String, localContactId: String?) {
+        // AyuGram: no Siri / Intents donations (requires the Siri entitlement).
+        guard AyuFeatureFlags.siriEnabled else {
+            return
+        }
         let handle = INPersonHandle(value: "tg\(peerId.id._internalGetInt64Value())", type: .unknown)
         let contact = INPerson(personHandle: handle, nameComponents: nil, displayName: displayTitle, image: nil, contactIdentifier: localContactId, customIdentifier: "tg\(peerId.id._internalGetInt64Value())")
     

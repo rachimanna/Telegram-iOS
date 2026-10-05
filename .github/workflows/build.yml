@@ -86,6 +86,8 @@ jobs:
           config["is_appstore_build"] = "false"
           config["appstore_id"] = "0"
           config["premium_iap_product_id"] = ""
+          # Sideloading re-signs without com.apple.developer.siri; keep it out of the entitlements.
+          config["enable_siri"] = False
           json.dump(config, open("build-system/ayugram-configuration.json", "w"), indent=2)
           EOF
 

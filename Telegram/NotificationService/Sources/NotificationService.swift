@@ -17,6 +17,7 @@ import AppLockState
 import NotificationsPresentationData
 import RangeSet
 import ConvertOpusToAAC
+import AyuCore
 import CoreServices
 import ImageIO
 import UniformTypeIdentifiers
@@ -690,7 +691,10 @@ private struct NotificationContent: CustomStringConvertible {
 
                 let interaction = INInteraction(intent: incomingCommunicationIntent, response: nil)
                 interaction.direction = .incoming
-                interaction.donate(completion: nil)
+                // AyuGram: no Siri / Intents donations (requires the Siri entitlement).
+                if AyuFeatureFlags.siriEnabled {
+                    interaction.donate(completion: nil)
+                }
 
                 do {
                     content = try content.updating(from: incomingCommunicationIntent) as! UNMutableNotificationContent

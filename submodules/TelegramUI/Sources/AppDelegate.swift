@@ -26,6 +26,7 @@ import OpenSSLEncryptionProvider
 import AppLock
 import PresentationDataUtils
 import TelegramIntents
+import AyuCore
 import AccountUtils
 import CoreSpotlight
 import TelegramAudio
@@ -910,6 +911,11 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                 }
             })
         }, requestSiriAuthorization: { completion in
+            // AyuGram: INPreferences crashes without the Siri entitlement (sideloaded builds).
+            guard AyuFeatureFlags.siriEnabled else {
+                completion(false)
+                return
+            }
             if #available(iOS 10, *) {
                 INPreferences.requestSiriAuthorization { status in
                     if case .authorized = status {
@@ -922,7 +928,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                 completion(false)
             }
         }, siriAuthorization: {
-            if buildConfig.isSiriEnabled {
+            if AyuFeatureFlags.siriEnabled && buildConfig.isSiriEnabled {
                 if #available(iOS 10, *) {
                     switch INPreferences.siriAuthorizationStatus() {
                     case .authorized:
@@ -3137,7 +3143,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         let _ = (context.sharedContext.accountManager.transaction { transaction in
             let settings = transaction.getSharedData(ApplicationSpecificSharedDataKeys.intentsSettings)?.get(IntentsSettings.self) ?? IntentsSettings.defaultSettings
             if !settings.initiallyReset || settings.account == nil {
-                if #available(iOS 10.0, *) {
+                if AyuFeatureFlags.siriEnabled, #available(iOS 10.0, *) {
                     Queue.mainQueue().async {
                         INInteraction.deleteAll()
                     }
