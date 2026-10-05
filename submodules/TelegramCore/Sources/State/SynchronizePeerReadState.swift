@@ -2,6 +2,7 @@ import Foundation
 import Postbox
 import TelegramApi
 import SwiftSignalKit
+import AyuCore
 
 
 private enum PeerReadStateMarker: Equatable {
@@ -227,6 +228,11 @@ private func validatePeerReadState(network: Network, postbox: Postbox, stateMana
 }
 
 private func pushPeerReadState(network: Network, postbox: Postbox, stateManager: AccountStateManager, peerId: PeerId, readState: PeerReadState) -> Signal<PeerReadState, PeerReadStateValidationError> {
+    // AyuGram ghost mode ("Don't read messages", AyuGhostUtils): the chat is marked read locally,
+    // but the server is not told. "Read until here" / "Read after reply" send their own readHistory request (ayu_pushReadOnServer).
+    if !AyuGhostState.shared.shouldSendRead(peerId: peerId.toInt64()) {
+        return .single(readState)
+    }
     if peerId.namespace == Namespaces.Peer.SecretChat {
         return inputSecretChat(postbox: postbox, peerId: peerId)
         |> mapToSignal { inputPeer -> Signal<PeerReadState, PeerReadStateValidationError> in

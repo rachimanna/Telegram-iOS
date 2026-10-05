@@ -12,6 +12,7 @@ import TextFormat
 import Markdown
 import Display
 import TelegramStringFormatting
+import AyuCore
 
 struct ChatHistoryEntriesForViewState {
     private var messageStableIdToLocalId: [UInt32: Int64] = [:]
@@ -140,6 +141,15 @@ func chatHistoryEntriesForView(
         }
     }
     
+    // AyuGram: message filters (AyuFilter; channels always, other chats with "Apply in chats")
+    var ayuIsBroadcastChannel = false
+    for entry in view.additionalData {
+        if case let .peer(_, peer) = entry, let channel = peer as? TelegramChannel, case .broadcast = channel.info {
+            ayuIsBroadcastChannel = true
+        }
+    }
+    let ayuFiltersApply = AyuFilter.shared.appliesIn(isChannel: ayuIsBroadcastChannel)
+    
     var count = 0
     loop: for entry in view.entries {
         var message = entry.message
@@ -151,6 +161,10 @@ func chatHistoryEntriesForView(
         }
         
         if pendingRemovedMessages.contains(message.id) {
+            continue
+        }
+        
+        if ayuFiltersApply && !message.text.isEmpty && AyuFilter.shared.isFiltered(text: message.text) {
             continue
         }
         

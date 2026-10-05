@@ -3,6 +3,7 @@ import TelegramApi
 import Postbox
 import SwiftSignalKit
 import MtProtoKit
+import AyuCore
 
 private typealias SignalKitTimer = SwiftSignalKit.Timer
 
@@ -53,7 +54,20 @@ private final class AccountPresenceManagerImpl {
             }, queue: self.queue)
             self.onlineTimer = timer
             timer.start()
-            request = self.network.request(Api.functions.account.updateStatus(offline: .boolFalse))
+            // AyuGram ghost mode: "Don't send online" keeps reporting offline (the timer keeps running,
+            // so turning ghost mode off goes back online within 30 s).
+            if AyuGhostState.shared.shouldSendOnline {
+                let onlineRequest = self.network.request(Api.functions.account.updateStatus(offline: .boolFalse))
+                if AyuSettings.shared[.sendOfflinePacketAfterOnline] {
+                    // "Immediate offline after online" (AyuGram4A sendOfflinePacketAfterOnline).
+                    let offlineRequest = self.network.request(Api.functions.account.updateStatus(offline: .boolTrue))
+                    request = onlineRequest |> then(offlineRequest)
+                } else {
+                    request = onlineRequest
+                }
+            } else {
+                request = self.network.request(Api.functions.account.updateStatus(offline: .boolTrue))
+            }
         } else {
             self.onlineTimer?.invalidate()
             self.onlineTimer = nil

@@ -101,6 +101,11 @@ public extension TelegramEngine {
             return _internal_applyMaxReadIndexInteractively(postbox: self.account.postbox, stateManager: self.account.stateManager, index: index)
         }
 
+        /// AyuGram: "Read until here" — reads the chat up to `index` on the server even in ghost mode.
+        public func ayuReadOnServer(index: MessageIndex) -> Signal<Never, NoError> {
+            return _internal_ayuReadOnServer(account: self.account, index: index)
+        }
+
         public func sendScheduledMessageNowInteractively(messageId: MessageId) -> Signal<Never, NoError> {
             return _internal_sendScheduledMessageNowInteractively(postbox: self.account.postbox, messageId: messageId)
         }

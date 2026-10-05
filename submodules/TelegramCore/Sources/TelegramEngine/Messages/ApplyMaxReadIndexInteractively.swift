@@ -2,6 +2,7 @@ import Foundation
 import Postbox
 import TelegramApi
 import SwiftSignalKit
+import AyuCore
 
 
 func _internal_applyMaxReadIndexInteractively(postbox: Postbox, stateManager: AccountStateManager, index: MessageIndex) -> Signal<Void, NoError> {
@@ -179,7 +180,7 @@ func _internal_toggleForumThreadUnreadMarkInteractively(transaction: Transaction
             }
             
             if peer.isForum {
-                if let inputPeer = apiInputPeer(peer) {
+                if let inputPeer = apiInputPeer(peer), AyuGhostState.shared.shouldSendRead(peerId: peerId.toInt64()) { // AyuGram ghost mode
                     let _ = network.request(Api.functions.messages.readDiscussion(peer: inputPeer, msgId: Int32(clamping: threadId), readMaxId: messageIndex.id.id)).start()
                 }
             } else if peer.isMonoForum {
@@ -215,7 +216,7 @@ func _internal_markForumThreadAsReadInteractively(transaction: Transaction, netw
         }
         
         if peer.isForum {
-            if let inputPeer = apiInputPeer(peer) {
+            if let inputPeer = apiInputPeer(peer), AyuGhostState.shared.shouldSendRead(peerId: peerId.toInt64()) { // AyuGram ghost mode
                 let _ = network.request(Api.functions.messages.readDiscussion(peer: inputPeer, msgId: Int32(clamping: threadId), readMaxId: messageIndex.id.id)).start()
             }
         } else if peer.isMonoForum {
@@ -257,7 +258,7 @@ func _internal_togglePeerUnreadMarkInteractively(transaction: Transaction, netwo
                 }
                 
                 if peer.isForum {
-                    if let inputPeer = apiInputPeer(peer) {
+                    if let inputPeer = apiInputPeer(peer), AyuGhostState.shared.shouldSendRead(peerId: peerId.toInt64()) { // AyuGram ghost mode
                         let _ = network.request(Api.functions.messages.readDiscussion(peer: inputPeer, msgId: Int32(clamping: item.threadId), readMaxId: messageIndex.id.id)).start()
                     }
                 } else if peer.isMonoForum {

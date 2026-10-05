@@ -25,6 +25,7 @@ swift_library(
         "//submodules/Components/ReactionImageComponent",
         "//submodules/TelegramUI/Components/AnimationCache",
         "//submodules/TelegramUI/Components/MultiAnimationRenderer",
+        "//submodules/AyuGram/AyuCore",
     ],
     visibility = [
         "//visibility:public",

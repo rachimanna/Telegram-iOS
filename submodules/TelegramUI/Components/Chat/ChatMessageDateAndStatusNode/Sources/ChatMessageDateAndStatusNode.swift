@@ -12,6 +12,7 @@ import ReactionImageComponent
 import AnimationCache
 import MultiAnimationRenderer
 import TelegramStringFormatting
+import AyuCore
 
 private func maybeAddRotationAnimation(_ layer: CALayer, duration: Double) {
     if let _ = layer.animation(forKey: "clockFrameAnimation") {
@@ -541,7 +542,9 @@ public class ChatMessageDateAndStatusNode: ASDisplayNode {
             if arguments.edited {
                 if let useEditedTimestamp = arguments.context.getAppConfigValue("message_primary_edited_date") as? Bool, useEditedTimestamp {
                 } else {
-                    updatedDateText = "\(arguments.presentationData.strings.Conversation_MessageEditedLabel) \(updatedDateText)"
+                    // AyuGram: custom "edited" mark (editedMarkText), Telegram's label when empty
+                    let ayuEditedMark = AyuSettings.shared.editedMarkText
+                    updatedDateText = "\(ayuEditedMark.isEmpty ? arguments.presentationData.strings.Conversation_MessageEditedLabel : ayuEditedMark) \(updatedDateText)"
                 }
             }
             if let impressionCount = arguments.impressionCount {

@@ -12,6 +12,7 @@ import ItemListPeerItem
 import DeviceAccess
 import TelegramStringFormatting
 import PeerNameColorItem
+import AyuCore
 
 enum SettingsSection: Int, CaseIterable {
     case edit
@@ -21,6 +22,7 @@ enum SettingsSection: Int, CaseIterable {
     case proxy
     case apps
     case shortcuts
+    case ayuGram
     case advanced
     case payment
     case extra
@@ -219,6 +221,11 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
     }))
     items[.shortcuts]!.append(PeerInfoScreenDisclosureItem(id: 4, text: presentationData.strings.Settings_ChatFolders, icon: PresentationResourcesSettings.chatFolders, action: {
         interaction.openSettings(.chatFolders)
+    }))
+    
+    // AyuGram preferences, in their own group right above Notifications.
+    items[.ayuGram]!.append(PeerInfoScreenDisclosureItem(id: 0, label: .text(AyuSettings.shared.isGhostModeActive ? "👻" : ""), text: AyuStrings.get("AyuPreferences"), icon: PresentationResourcesSettings.ayuGram, action: {
+        interaction.openSettings(.ayuGram)
     }))
     
     let notificationsWarning: Bool

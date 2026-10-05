@@ -38,6 +38,8 @@ import ChatMessageItemView
 import ChatMessageBubbleItemNode
 import AdsInfoScreen
 import AdsReportScreen
+import AyuCore
+import AyuGramUI
  
 private struct MessageContextMenuData {
     let starStatus: Bool?
@@ -1922,6 +1924,26 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
             })))
         }
 
+        // AyuGram: "Edits history" (saved previous versions of this message).
+        if messages.count == 1, message.id.namespace == Namespaces.Message.Cloud, ayuHasEditRevisions(accountPeerId: context.account.peerId, message: message) {
+            actions.append(.action(ContextMenuActionItem(text: AyuStrings.get("EditsHistoryMenu"), icon: { theme in
+                return generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Edit"), color: theme.actionSheet.primaryTextColor)
+            }, action: { _, f in
+                f(.dismissWithoutContent)
+                controllerInteraction.navigationController()?.pushViewController(ayuEditHistoryController(context: context, message: message))
+            })))
+        }
+        
+        // AyuGram ghost mode: "Read until here" sends the read packet for this message explicitly.
+        if !AyuSettings.shared[.sendReadPackets], message.id.namespace == Namespaces.Message.Cloud, message.id.peerId.namespace != Namespaces.Peer.SecretChat, message.flags.contains(.Incoming) {
+            actions.append(.action(ContextMenuActionItem(text: AyuStrings.get("ReadUntilMenuText"), icon: { theme in
+                return generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Read"), color: theme.actionSheet.primaryTextColor)
+            }, action: { _, f in
+                f(.dismissWithoutContent)
+                let _ = context.engine.messages.ayuReadOnServer(index: message.index).startStandalone()
+            })))
+        }
+        
         if data.messageActions.options.contains(.forward) {
             if !isCopyProtected {
                 actions.append(.action(ContextMenuActionItem(text: chatPresentationInterfaceState.strings.Conversation_ContextMenuForward, icon: { theme in

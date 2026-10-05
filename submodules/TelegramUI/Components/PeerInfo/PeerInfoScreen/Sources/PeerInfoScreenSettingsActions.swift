@@ -5,6 +5,7 @@ import AccountContext
 import SwiftSignalKit
 import TelegramCore
 import SettingsUI
+import AyuGramUI
 import PeerInfoStoryGridScreen
 import CallListUI
 import PassportUI
@@ -271,6 +272,8 @@ extension PeerInfoScreenNode {
             self.interaction.editingOpenNameColorSetup()
         case .powerSaving:
             push(energySavingSettingsScreen(context: self.context))
+        case .ayuGram:
+            push(ayuGramSettingsController(context: self.context))
         case .businessSetup:
             guard let controller = self.controller, !controller.presentAccountFrozenInfoIfNeeded() else {
                 return

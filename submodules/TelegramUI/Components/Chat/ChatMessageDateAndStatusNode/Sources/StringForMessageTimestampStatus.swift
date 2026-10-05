@@ -6,6 +6,7 @@ import TelegramStringFormatting
 import TextFormat
 import LocalizedPeerData
 import AccountContext
+import AyuCore
 
 public enum MessageTimestampStatusFormat {
     case full
@@ -245,6 +246,14 @@ public func stringForMessageTimestampStatus(
     } else {
         if let authorTitle = authorTitle, !authorTitle.isEmpty {
             dateText = "\(authorTitle), \(dateText)"
+        }
+    }
+    
+    // AyuGram: deleted mark (ChatMessageCell hook on Android: "🧹 12:34")
+    if message.ayuIsDeleted {
+        let mark = AyuSettings.shared.deletedMarkText
+        if !mark.isEmpty {
+            dateText = "\(mark) \(dateText)"
         }
     }
     

@@ -1,3 +1,5 @@
+> **AyuGram for iOS**: an unofficial fork with AyuGram features. See [AYUGRAM.md](AYUGRAM.md).
+
 # Telegram iOS Source Code Compilation Guide
 
 We welcome all developers to use our API and source code to create applications on our platform.

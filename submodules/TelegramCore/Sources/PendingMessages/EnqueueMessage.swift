@@ -2,6 +2,7 @@ import Foundation
 import Postbox
 import TelegramApi
 import SwiftSignalKit
+import AyuCore
 import Emoji
 
 public enum EnqueueMessageGrouping {
@@ -678,6 +679,18 @@ public func resendMessages(account: Account, messageIds: [MessageId]) -> Signal<
 }
 
 func enqueueMessages(transaction: Transaction, account: Account, peerId: PeerId, messages: [(Bool, EnqueueMessage)], disableAutoremove: Bool = false, transformGroupingKeysWithPeerId: Bool = false) -> [MessageId?] {
+    // AyuGram ghost mode: "Send read status after reply" (markReadAfterSend on Android)
+    let ayuSettings = AyuSettings.shared
+    if !ayuSettings[.sendReadPackets] && ayuSettings[.markReadAfterSend] && peerId.namespace != Namespaces.Peer.SecretChat && peerId != account.peerId {
+        if let index = transaction.getTopPeerMessageIndex(peerId: peerId, namespace: Namespaces.Message.Cloud), let peer = transaction.getPeer(peerId) {
+            let _ = transaction.applyInteractiveReadMaxIndex(index)
+            let _ = ayu_pushReadOnServer(network: account.network, stateManager: account.stateManager, peer: peer, maxId: index.id.id).start()
+        }
+    }
+    // AyuGram: "Schedule messages" — send everything as a scheduled message in ~12 s
+    // (SendMessagesHelper hook on Android: schedule_date = now + 10 + 1).
+    let ayuAutoSchedule = ayuSettings[.useScheduledMessages] && peerId.namespace != Namespaces.Peer.SecretChat && peerId != account.peerId
+
     /**
      * If it is a support account, mark messages as read here as they are
      * not marked as read when chat is opened.
@@ -704,6 +717,16 @@ func enqueueMessages(transaction: Transaction, account: Account, peerId: PeerId,
     var updatedMessages: [(Bool, EnqueueMessage)] = []
     outer: for (transformedMedia, message) in messages {
         var updatedMessage = message
+        if ayuAutoSchedule {
+            updatedMessage = updatedMessage.withUpdatedAttributes { attributes in
+                if attributes.contains(where: { $0 is OutgoingScheduleInfoMessageAttribute }) {
+                    return attributes
+                }
+                var updatedAttributes = attributes
+                updatedAttributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(Date().timeIntervalSince1970) + 12, repeatPeriod: nil))
+                return updatedAttributes
+            }
+        }
         if transformGroupingKeysWithPeerId {
             updatedMessage = updatedMessage.withUpdatedGroupingKey { groupingKey -> Int64? in
                 if let groupingKey = groupingKey {
