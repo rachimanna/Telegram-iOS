@@ -88,6 +88,8 @@ jobs:
           config["premium_iap_product_id"] = ""
           # Sideloading re-signs without com.apple.developer.siri; keep it out of the entitlements.
           config["enable_siri"] = False
+          # Same for iCloud (CloudKit / key-value store): free signing has no iCloud entitlement.
+          config["enable_icloud"] = False
           json.dump(config, open("build-system/ayugram-configuration.json", "w"), indent=2)
           EOF
 

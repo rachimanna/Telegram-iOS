@@ -530,7 +530,8 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         
         let baseAppBundleId = Bundle.main.bundleIdentifier!
         let appGroupName = "group.\(baseAppBundleId)"
-        let maybeAppGroupUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName)
+        // AyuGram: fall back to a sandbox directory when the app group entitlement is missing (sideloading).
+        let maybeAppGroupUrl = AyuSideloadSupport.sharedContainerURL(appGroupName: appGroupName)
         
         let buildConfig = BuildConfig(baseAppBundleId: baseAppBundleId)
         self.buildConfig = buildConfig
@@ -1554,7 +1555,9 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         }
         #endif
         
-        if #available(iOS 13.0, *) {
+        // AyuGram: registering an identifier that is not in BGTaskSchedulerPermittedIdentifiers throws
+        // (happens when a sideloading tool changes the bundle id).
+        if #available(iOS 13.0, *), AyuSideloadSupport.isBackgroundTaskIdentifierPermitted("\(baseAppBundleId).cleanup") {
             let cleanupTaskId = "\(baseAppBundleId).cleanup"
             
             BGTaskScheduler.shared.register(forTaskWithIdentifier: cleanupTaskId, using: DispatchQueue.main) { task in

@@ -9,6 +9,7 @@ import AccountContext
 import UniversalMediaPlayer
 import TelegramAudio
 import TelegramPresentationData
+import AyuCore
 
 private struct AccountTasks {
     let stateSynchronization: Bool
@@ -535,6 +536,9 @@ public final class SharedWakeupManager {
         
         let baseAppBundleId = Bundle.main.bundleIdentifier!
         let uploadTaskId = "\(baseAppBundleId).upload.message\(self.nextBackgroundProcessingTaskId)"
+        guard AyuSideloadSupport.isBackgroundTaskIdentifierPermitted(uploadTaskId) else {
+            return
+        }
         self.nextBackgroundProcessingTaskId += 1
         self.backgroundProcessingTaskProgressByKey = [:]
         self.backgroundProcessingTaskLaunched = false
@@ -711,6 +715,9 @@ public final class SharedWakeupManager {
         
         let baseAppBundleId = Bundle.main.bundleIdentifier!
         let uploadTaskId = "\(baseAppBundleId).upload.story\(self.nextBackgroundStoryProcessingTaskId)"
+        guard AyuSideloadSupport.isBackgroundTaskIdentifierPermitted(uploadTaskId) else {
+            return
+        }
         self.nextBackgroundStoryProcessingTaskId += 1
         self.backgroundStoryProcessingTaskProgressByKey = [:]
         self.backgroundStoryProcessingTaskLaunched = false

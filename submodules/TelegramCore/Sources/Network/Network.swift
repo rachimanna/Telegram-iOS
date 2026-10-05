@@ -10,6 +10,7 @@ import NetworkLogging
 #endif
 
 import EncryptionProvider
+import AyuCore
 
 public enum ConnectionStatus: Equatable {
     case waitingForNetwork
@@ -551,7 +552,7 @@ func initializedNetwork(accountId: AccountRecordId, arguments: NetworkInitializa
             context.keychain = keychain
             var wrappedAdditionalSource: MTSignal?
             #if os(iOS)
-            if #available(iOS 10.0, *), !supplementary, arguments.isICloudEnabled {
+            if #available(iOS 10.0, *), !supplementary, arguments.isICloudEnabled, AyuFeatureFlags.iCloudEnabled {
                 var cloudDataContextValue: CloudDataContext?
                 if let value = cloudDataContext.with({ $0 }) {
                     cloudDataContextValue = value
@@ -1314,6 +1315,10 @@ class Keychain: NSObject, MTKeychain {
 }
 #if os(iOS)
 func makeCloudDataContext(encryptionProvider: EncryptionProvider) -> CloudDataContext? {
+    // AyuGram: CKContainer without the iCloud entitlement terminates the app (sideloaded builds).
+    guard AyuFeatureFlags.iCloudEnabled else {
+        return nil
+    }
     if #available(iOS 10.0, *) {
         return CloudDataContextImpl(encryptionProvider: encryptionProvider)
     } else {
